@@ -1,0 +1,115 @@
+Zadanie 1
+SELECT * FROM klienci JOIN produkty;
+
+Zadanie 2
+SELECT zamow.*, sztuk FROM zamow INNER JOIN detal_zamow ON idz=z_id;
+
+Zadanie 3
+SELECT nazwa, sztuk FROM detal_zamow JOIN produkty ON idp=p_id;
+
+Zadanie 4
+SELECT * FROM detal_zamow ORDER BY sztuk DESC;
+
+Zadanie 5
+SELECT sztuk FROM detal_zamow INNER JOIN zamow ON idz=z_id WHERE TIME(data) > '12:00:00';
+
+Zadanie 6
+SELECT MONTHNAME(data) AS 'Miesiac' FROM zamow JOIN klienci ON idk=k_id WHERE miasto="Wrocław";
+
+Zadanie 7
+ SELECT cena FROM produkty 
+ INNER JOIN detal_zamow ON idp=p_id 
+ INNER JOIN zamow ON z_id=idz 
+  WHERE DAYNAME(data)="Friday";
+
+Zadanie 8
+SELECT DISTINCT
+  nazwa FROM 
+  (SELECT nazwa FROM klienci 
+    JOIN zamow ON idk=k_id 
+    JOIN detal_zamow ON idz=z_id 
+    WHERE sztuk > 4 
+    ORDER BY miasto DESC) 
+  AS nazwa;
+
+Zadanie 9
+SELECT adres FROM klienci
+INNER JOIN zamow ON idk=k_id 
+INNER JOIN detal_zamow ON idz=z_id
+INNER JOIN produkty ON idp=p_id
+WHERE produkty.nazwa LIKE "%laptop%"
+ORDER BY klienci.nazwa DESC;
+
+Zadanie 10
+SELECT nazwa FROM (
+    SELECT DISTINCT produkty.nazwa, produkty.cena 
+    FROM produkty 
+    INNER JOIN detal_zamow ON produkty.idp = detal_zamow.p_id 
+    INNER JOIN zamow ON zamow.idz = detal_zamow.z_id 
+    INNER JOIN klienci ON zamow.k_id = klienci.idk 
+    WHERE klienci.telefon LIKE "%4%"
+) as pr 
+ORDER BY cena;
+
+Zadanie 11
+SELECT produkty.nazwa AS "Nazwa powtarzajacego sie produktu", klienci.nazwa AS "Nazwa powtarzajacego sie klienta"
+FROM produkty INNER JOIN klienci ON produkty.nazwa=klienci.nazwa;
+
+Zadanie 12 
+SELECT nazwa, DATE(data) AS data FROM klienci JOIN zamow ON idk=k_id ORDER BY data ASC;
+
+Zadanie 13
+SELECT det_pro_zamow.nazwa, GROUP_CONCAT(DISTINCT miasto) AS miasta 
+FROM klienci JOIN
+  (
+  SELECT * FROM zamow 
+  INNER JOIN 
+    (
+    SELECT * FROM detal_zamow
+    INNER JOIN produkty ON idp=p_id
+    ) AS det_pro ON idz=z_id
+  ) AS det_pro_zamow ON idk=k_id 
+GROUP BY det_pro_zamow.nazwa;
+
+Zadanie 14
+SELECT nazwa FROM produkty LEFT JOIN detal_zamow ON idp=p_id WHERE sztuk IS NULL;
+
+Zadanie 15
+SELECT nazwa FROM klienci
+LEFT JOIN 
+  (
+  SELECT * FROM zamow
+  LEFT JOIN detal_zamow ON idz=z_id
+  ) AS zam
+ON idk=k_id 
+WHERE idz IS NULL;
+
+Zadanie 16
+SELECT COUNT(*) AS "Puste zamowienia"
+FROM klienci 
+LEFT JOIN
+  (
+  SELECT * FROM zamow
+  LEFT JOIN detal_zamow
+  ON idz=z_id
+  ) AS zam
+ON idk=k_id
+WHERE idz IS NOT NULL 
+AND idd IS NULL;
+
+Zadanie 17
+SELECT *,
+    (
+    SELECT COUNT(DISTINCT z_id) 
+    FROM detal_zamow WHERE p_id = produkty.idp
+    ) 
+AS "Ilosc roznych zamowien"
+FROM detal_zamow
+LEFT JOIN produkty ON p_id=idp
+WHERE p_id=
+(
+SELECT idp FROM produkty 
+WHERE ilosc=
+(SELECT MAX(ilosc) FROM produkty)
+);
+

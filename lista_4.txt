@@ -1,0 +1,304 @@
+Zadanie 1
+-- wszystkie dane klientow
+CREATE VIEW daneK AS
+SELECT 
+  klienci.idk,
+  klienci.nazwa AS knazwa,
+  klienci.miasto,
+  klienci.adres,
+  klienci.telefon,
+  zamow.idz,
+  zamow.k_id,
+  zamow.data,
+  detal_zamow.idd,
+  detal_zamow.z_id,
+  detal_zamow.p_id,
+  detal_zamow.sztuk,
+  produkty.idp,
+  produkty.nazwa AS pnazwa,
+  produkty.cena,
+  produkty.ilosc
+FROM klienci
+LEFT JOIN zamow ON klienci.idk=zamow.k_id
+LEFT JOIN detal_zamow ON detal_zamow.z_id=zamow.idz
+LEFT JOIN produkty ON produkty.idp=detal_zamow.p_id;
+
+-- wszystkie dane produtkow
+CREATE VIEW daneP AS
+SELECT 
+  klienci.idk,
+  klienci.nazwa AS knazwa,
+  klienci.miasto,
+  klienci.adres,
+  klienci.telefon,
+  zamow.idz,
+  zamow.k_id,
+  zamow.data,
+  detal_zamow.idd,
+  detal_zamow.z_id,
+  detal_zamow.p_id,
+  detal_zamow.sztuk,
+  produkty.idp,
+  produkty.nazwa AS pnazwa,
+  produkty.cena,
+  produkty.ilosc
+FROM produkty
+LEFT JOIN detal_zamow ON detal_zamow.p_id=produkty.idp
+LEFT JOIN zamow ON detal_zamow.z_id=zamow.idz
+LEFT JOIN klienci ON zamow.k_id=klienci.idk;
+
+Zadanie 2
+-- zadanie 9
+-- nadaje sie jedynie perspektywa z danymi wszystkich klientow, gdyz tabela z danymi produktow
+-- wypisuje rowniez wartosci nullowe dla laptopow ktore nigdy nie zostaly zamowione przez ktoregos z klientow
+-- dlatego oprocz poprawnych wyswietla nam rowniez w adresie NULL
+SELECT adres 
+FROM daneK 
+WHERE pnazwa LIKE '%laptop%' 
+ORDER BY knazwa DESC;
+
+-- zadanie 10
+-- w tym przypadku obie perspektywy sie nadaja gdyz mamy klauzule where ktora filtruje 
+-- dlatego numer musi zawierac przynajmniej jedna liczba 4
+SELECT pnazwa 
+FROM daneK 
+WHERE telefon LIKE '%4%' 
+ORDER BY cena;
+
+-- zadanie 13
+-- do tego zadania mozna uzyc obu perspektyw tylko trzeba uzyc wtedy odpowiedniej klauzuli WHERE
+-- jesli uzywamy danych klientow filtrujemy WHERE pnazwa IS NOT NULL
+-- tak samo dla danych produktow WHERE miasto IS NOT NULL
+SELECT pnazwa, IFNULL(GROUP_CONCAT(miasto ORDER BY miasto SEPARATOR ', '), 'Brak danych')
+FROM daneP GROUP BY pnazwa;
+
+-- zadanie 14
+-- tutaj mozna uzyc tylko perspektywy z danymi produktow, poniewaz wyswietlajac je z danych klienta te ktore nie zostaly
+-- zamowione nie istnieja w tym widoku
+SELECT pnazwa 
+FROM daneP 
+WHERE idk IS NULL;
+
+-- zadanie 15
+-- tutaj mozna uzyc tylko perspektyw z danymi klientow poniewaz 
+-- chcemy wyswietlic te rekordy gdzie zamowienia sa wartosci NULL
+SELECT knazwa 
+FROM daneK 
+WHERE idd IS NULL;
+
+-- zadanie 16
+-- perspektywa pozwala na wykonanie tego zadania 
+SELECT pnazwa, COUNT(DISTINCT idk) AS 'Ilosc klientow'
+FROM daneP 
+WHERE miasto LIKE 'W%'
+GROUP BY pnazwa;
+
+Zadanie 3
+SELECT knazwa 
+FROM daneK 
+WHERE pnazwa LIKE '%laptop%' OR pnazwa LIKE '%tablet%' 
+GROUP BY knazwa 
+HAVING COUNT(knazwa) > 1;
+
+Zadanie 4
+SELECT  d1.knazwa 
+FROM daneK d1 
+JOIN daneK AS d2 ON d2.pnazwa LIKE 'laptop' 
+WHERE d1.cena > d2.cena 
+GROUP BY knazwa;
+
+Zadanie 5
+SELECT pnazwa
+FROM daneK
+WHERE knazwa < 
+  (
+    SELECT d1.knazwa
+    FROM daneK d1
+    JOIN daneK d2 ON d1.miasto = d2.miasto
+    WHERE d2.miasto = 'Warszawa'
+    GROUP BY knazwa ORDER BY d1.knazwa LIMIT  1
+  );
+
+Zadanie 6
+SELECT knazwa 
+FROM daneK GROUP BY knazwa
+HAVING SUM(cena*sztuk) > 
+  (
+    SELECT SUM(cena*sztuk)
+    FROM daneK
+    WHERE knazwa='Astro'
+  );
+
+Zadanie 7
+-- a bez wag
+SELECT DISTINCT pnazwa 
+FROM daneP 
+WHERE cena > 2*(
+  SELECT AVG(cena) 
+  FROM daneP
+  ) 
+GROUP BY pnazwa;
+
+-- b wazona liczba egzemplarzy na stanie sklepu
+SELECT DISTINCT pnazwa 
+FROM daneP 
+WHERE cena > 2*
+  (
+  SELECT SUM(cena*ilosc)/SUM(ilosc) 
+  FROM daneP
+  ) 
+GROUP BY pnazwa;
+-- c wazaona liczba zamowien
+SELECT DISTINCT pnazwa 
+FROM daneP 
+WHERE cena > 2*
+  (
+  SELECT SUM(cena*sztuk)/SUM(sztuk) 
+  FROM daneP
+  ) 
+GROUP BY pnazwa;
+
+Zadanie 8
+SELECT w.wartosc/w.ilsoc AS 'Srednia wartosc zamowienia na tydzien'
+FROM 
+  (
+  SELECT DISTINCT WEEKOFYEAR(data) AS tydzien, COUNT(idz) AS ilsoc, SUM(cena*sztuk) AS wartosc 
+  FROM daneP GROUP BY tydzien
+  ) AS w
+WHERE w.tydzien IS NOT NULL;
+
+Zadanie 9
+SELECT knazwa, SUM(cena*sztuk) AS suma 
+FROM daneK 
+GROUP BY knazwa 
+HAVING suma = 
+  (
+  SELECT MAX(suma) 
+  FROM 
+    (
+    SELECT SUM(cena*sztuk) AS suma 
+    FROM daneK 
+    GROUP BY knazwa
+    ) 
+  AS temp
+  );
+
+Zdanie 10
+-- najwiecej razy zamawiane
+SELECT pnazwa, COUNT(DISTINCT idz) AS suma 
+FROM daneP 
+GROUP BY pnazwa 
+HAVING suma = 
+  (
+  SELECT MAX(suma) 
+  FROM 
+    (
+    SELECT COUNT(DISTINCT idz) AS suma 
+    FROM daneP 
+    GROUP BY pnazwa
+    ) 
+  AS temp
+  );
+-- najwieksza liczba sztuk zamowionych
+SELECT pnazwa, SUM(sztuk) AS suma 
+FROM daneP 
+GROUP BY pnazwa 
+HAVING suma = 
+  (
+  SELECT MAX(suma) 
+  FROM 
+    (
+    SELECT SUM(sztuk) AS suma 
+    FROM daneP 
+    GROUP BY pnazwa
+    ) 
+  AS temp
+  );
+
+Zadanie 11
+SELECT d1.pnazwa, DATE(d1.data) AS data, MAX(d1.cena*d1.sztuk) AS wartosc
+FROM daneK d1 
+LEFT JOIN daneK d2 ON DATE(d1.data) = DATE(d2.data) AND (d1.cena*d1.sztuk)<(d2.cena*d2.sztuk)
+WHERE d2.idk IS NULL AND d1.pnazwa IS NOT NULL 
+GROUP BY DATE(d1.data), pnazwa
+ORDER BY data DESC;
+
+Zadanie 12
+SELECT MAX(knazwa) AS nazwa, miasto, MAX(data) AS data
+FROM daneK 
+WHERE data IS NOT NULL
+GROUP BY miasto;
+
+Zadanie 13
+SELECT knazwa, MAX(pnazwa) AS pnazwa, MAX(cena*sztuk) AS 'Wydane najwiecej'
+FROM daneK 
+WHERE pnazwa IS NOT NULL
+GROUP BY knazwa;
+
+Zadanie 14
+-- na liscie 2 wykonalem to zadanie bez podzapytania
+SELECT nazwa 
+FROM produkty
+WHERE NOT EXISTS
+  (SELECT *
+  FROM detal_zamow
+  WHERE p_id=idp);
+
+Zadanie 15
+-- bez podzapytan bo w liscie nr 2 je zrobilem
+SELECT nazwa
+FROM klienci
+LEFT JOIN zamow ON idk=k_id 
+LEFT JOIN detal_zamow ON idz=z_id
+WHERE idz IS NULL;
+
+Zadanie 16
+SELECT COUNT(*) AS 'Ilosc pustych zamowien'
+FROM zamow LEFT JOIN detal_zamow ON idz=z_id
+WHERE idd IS NULL;
+
+Zadanie 17
+SELECT z1.*
+FROM zamow z1
+JOIN zamow z2 ON z1.data <= z2.data
+WHERE z1.k_id IN 
+  (
+    SELECT idk 
+    FROM klienci
+  )
+GROUP BY idz
+HAVING COUNT(z1.idz) <= 3
+ORDER BY data DESC;
+
+Zadanie 18
+SELECT p_id, COUNT(DISTINCT z_id) AS 'Ilosc roznych'
+FROM detal_zamow
+WHERE p_id IN 
+  (
+    SELECT idp
+    FROM produkty
+    WHERE ilosc = 
+      (
+        SELECT MAX(ilosc)
+        FROM produkty
+      )
+  )
+GROUP BY p_id;
+
+Zadanie 19
+SELECT knazwa, COUNT(DISTINCT idp) AS 'Liczba produktow' 
+FROM daneK 
+WHERE cena < 1500 
+GROUP BY knazwa;
+
+Zadanie 20
+SELECT nazwa, (SELECT COUNT(idk)
+                FROM klienci JOIN zamow ON idk=k_id
+                WHERE miasto LIKE 'W%' AND idz IN
+                  (
+                    SELECT z_id from detal_zamow 
+                    WHERE p_id = idp
+                  )
+                )
+AS 'Ilosc klientow'
+FROM produkty;

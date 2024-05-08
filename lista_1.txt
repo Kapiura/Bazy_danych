@@ -1,0 +1,83 @@
+Zadanie 1
+SELECT DAYOFYEAR(NOW()) AS "Dzien roku";
+
+Zadanie 2
+SELECT DAYNAME('2002-12-06') AS "Dzien daty urodzin";
+
+Zadanie 3
+SELECT FLOOR(PI() * POW(10,10)) % 10 AS "Dziesiata cyfra po przecinku liczby pi";
+
+Zadanie 4
+SELECT FLOOR(EXP(1) * POW(10,8)) MOD 10 AS "Osma cyfra po przecinku rozwiniecia liczby e";
+
+Zadanie 5
+SELECT FLOOR(RAND() * 6) + 1 AS "Rzut";
+
+Zadanie 6 
+SELECT nazwa, ilosc FROM produkty WHERE ilosc > 0;
+
+Zadanie 7 
+SELECT idk, nazwa, miasto, SUBSTRING_INDEX(adres,". ", -1) AS adres, telefon FROM klienci;
+
+Zadanie 8
+SELECT CONCAT(nazwa, ", ", adres, ", ", miasto, ", ", telefon) AS wizytkowka FROM klienci;
+
+Zadanie 9
+SELECT 
+  nazwa, 
+  JSON_OBJECT(
+    "zlotych", CAST(FLOOR(cena) AS UNSIGNED),
+    "groszy", CAST(ROUND(cena*100) MOD 100 AS UNSIGNED)
+  ) AS cena_json 
+FROM produkty;
+
+
+Zadanie 10
+SELECT idz, 
+  CASE WHEN DAYNAME(DATE_ADD(data, INTERVAL 30 DAY)) = "Sunday" 
+  THEN DATE_ADD(data, INTERVAL 28 DAY) 
+  WHEN DAYNAME(DATE_ADD(data, INTERVAL 30 DAY)) = "Saturday" 
+  THEN DATE_ADD(data, INTERVAL 29 DAY) 
+  ELSE DATE_ADD(data, INTERVAL 30 DAY) END AS data 
+  FROM zamow;
+
+
+Zadanie 11
+SELECT nazwa FROM klienci WHERE miasto != "Wrocław";
+
+Zadanie 12
+SELECT nazwa FROM klienci WHERE LEFT(nazwa, CEILING(CHAR_LENGTH(nazwa) / 2)) LIKE '%s%';
+
+Zadanie 13
+SELECT * FROM zamow 
+  WHERE DAYNAME(data) = "Monday" OR DAYNAME(data) = "Friday";
+
+Zadanie 14
+SELECT * FROM zamow WHERE HOUR(data)>16;
+
+Zadanie 15
+SELECT nazwa FROM produkty WHERE nazwa NOT LIKE "%Apple%";
+
+Zadanie 16
+SELECT nazwa FROM klienci WHERE adres LIKE "%Marszałkowska%";
+
+Zadanie 17
+SELECT miasto FROM klienci WHERE CHAR_LENGTH(adres)>15;
+
+Zadanie 18
+SELECT nazwa, 
+  IF(cena>1500, ROUND(cena*1.1/12,2), cena)  AS "Wysokość raty" 
+  FROM produkty;
+
+Zadanie 19
+SELECT *, 
+    (
+    SELECT COUNT(DISTINCT z_id) 
+    FROM detal_zamow 
+    WHERE detal_zamow.p_id = produkty.idp
+    ) 
+AS "Liczba zamówień"  
+FROM produkty  
+JOIN detal_zamow ON p_id=idp  
+WHERE 
+ilosc=(SELECT MAX(ilosc) FROM produkty);

@@ -1,0 +1,126 @@
+Zadanie 1
+SELECT SUM(ilosc* cena) AS "Wartość łączna towaru na stanie w sklepie" 
+FROM produkty;
+
+Zadanie 2
+SELECT GROUP_CONCAT(nazwa ORDER BY nazwa ASC SEPARATOR ', ') AS nazwy 
+FROM klienci;
+
+Zadanie 3
+SELECT DATEDIFF(MAX(data),MIN(data)) AS "Dni upłyniętych",
+       COUNT(DISTINCT nazwa) AS "Różnych produktów",
+       COUNT(DISTINCT idz) AS "Ilość zamówień"
+FROM produkty 
+LEFT JOIN detal_zamow ON idp=p_id
+LEFT JOIN zamow ON idz=z_id 
+WHERE nazwa LIKE "%Samsung%";
+
+Zadanie 4
+SELECT DAYNAME(data) AS 'Dzien tygodnia', COUNT(DISTINCT k_id) AS 'Liczba klientow' 
+FROM zamow GROUP BY DAYNAME(data);
+
+Zadanie 5
+SELECT YEAR(data) AS 'Lata', MONTHNAME(data) as Miesiac, SUM(cena*sztuk) AS 'Wartosc calkowita' 
+FROM zamow 
+RIGHT JOIN detal_zamow ON idz=z_id 
+LEFT JOIN produkty ON idp=p_id 
+GROUP BY Lata, Miesiac;
+
+Zadanie 6
+SELECT CEIL(cena/1000)*1000 AS Kategoria, JSON_ARRAYAGG(nazwa) AS Produkt
+FROM produkty
+GROUP BY CEIL(cena/1000)*1000 
+ORDER BY Kategoria;
+
+Zadanie 7
+SELECT nazwa, (sztuk * cena) AS 'Laczna wartosc' 
+FROM produkty 
+LEFT JOIN detal_zamow ON idp = p_id 
+WHERE (sztuk * cena) > 7000;
+
+Zadanie 8
+SELECT klienci.nazwa
+FROM klienci 
+LEFT JOIN zamow ON idk = k_id 
+LEFT JOIN detal_zamow ON idz = z_id 
+LEFT JOIN produkty ON idp = p_id 
+WHERE cena > 1800 AND sztuk > 1 
+GROUP BY klienci.nazwa, produkty.cena;
+
+Zadanie 9
+SELECT nazwa, AVG(sztuk) AS 'Srednia ilosc' 
+FROM produkty 
+LEFT JOIN detal_zamow ON idp=p_id 
+LEFT JOIN zamow ON idz=z_id 
+GROUP BY nazwa
+HAVING SUM(IF(DAYNAME(data)='Friday',1,0)) > 0;
+
+Zadanie 10
+SELECT nazwa, COUNT(idz) AS 'Liczba zamowien' 
+FROM klienci
+LEFT JOIN zamow ON idk=k_id
+GROUP BY nazwa;
+
+Zadanie 11
+SELECT nazwa, IFNULL(SUM(sztuk), 0) AS 'Ilosc zamowionych egzemplarzy'
+FROM produkty
+LEFT JOIN detal_zamow ON idp=p_id
+GROUP BY nazwa;
+
+Zadanie 12
+SELECT miasto, IFNULL(SUM(sztuk),0) AS Ilosc 
+FROM klienci
+LEFT JOIN zamow ON idk=k_id
+LEFT JOIN detal_zamow ON idz=z_id 
+GROUP BY miasto;
+
+Zadnie 13
+SELECT klienci.nazwa, klienci.miasto, IFNULL(SUM(cena * sztuk), 0) AS suma
+FROM klienci 
+LEFT JOIN zamow ON idk = k_id 
+LEFT JOIN detal_zamow ON idz = z_id 
+LEFT JOIN produkty ON idp = p_id 
+GROUP BY klienci.nazwa, klienci.miasto;
+
+Zadanie 14
+SELECT data, IFNULL(SUM(sztuk*cena),0) AS Wartosc
+FROM zamow 
+LEFT JOIN detal_zamow ON idz=z_id
+LEFT JOIN produkty ON idp=p_id
+GROUP BY data;
+
+Zadanie 15
+SELECT klienci.nazwa, COUNT(DISTINCT idz) AS 'Rozne produkty'
+FROM klienci
+LEFT JOIN zamow on idk=k_id
+LEFT JOIN detal_zamow ON idz=z_id
+LEFT JOIN produkty ON idp=p_id
+WHERE cena > 1500
+GROUP BY klienci.nazwa;
+
+Zadanie 16
+SELECT produkty.nazwa, COUNT(idk) AS 'Ilosc klientow'
+FROM produkty
+LEFT JOIN detal_zamow ON idp=p_id 
+LEFT JOIN zamow ON idz=z_id
+LEFT JOIN klienci ON idk=k_id
+WHERE klienci.miasto like "%W%"
+GROUP BY produkty.nazwa;
+
+Zdanie 17
+SELECT zam1.* 
+FROM zamow zam1
+JOIN zamow zam2 ON zam1.data <= zam2.data
+GROUP BY idz
+HAVING COUNT(zam2.data) <=3
+ORDER BY zam1.data;
+
+Zadanie 18
+SELECT p.*, COUNT(DISTINCT d.z_id) AS rozne_z_id 
+FROM produkty p 
+LEFT JOIN detal_zamow d ON p.idp = d.p_id 
+LEFT JOIN produkty p2 on p.ilosc < p2.ilosc 
+WHERE p2.idp IS NULL
+GROUP BY p.idp, p.nazwa;
+
+
