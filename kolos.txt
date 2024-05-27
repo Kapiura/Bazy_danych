@@ -1,0 +1,78 @@
+#Zadanie 1
+SELECT * 
+FROM dzielo 
+WHERE autor LIKE '%;%';
+
+#Zadanie 2
+SELECT *
+FROM rezerwacja
+WHERE TIME(datazamow) < '10:00:00';
+
+#Zadanie 3
+SELECT datawypoz
+FROM rezerwacja
+LEFT JOIN egzemplarz ON ide=e_id
+WHERE rokwydania % 2 = 0
+AND datawypoz IS NOT NULL;
+
+#Zadanie 4
+SELECT czytelnik.* 
+FROM czytelnik
+LEFT JOIN rezerwacja ON idc=c_id
+WHERE TIMESTAMPDIFF(DAY, datawypoz, datazwrot) > 1;
+
+#Zadanie 5
+SELECT wydawnictwo
+FROM egzemplarz 
+LEFT JOIN rezerwacja ON ide = e_id 
+WHERE datazamow IS NULL
+ORDER BY rokwydania DESC;
+
+#Zadanie 6
+SELECT COUNT(*) AS Ile
+FROM czytelnik 
+LEFT JOIN rezerwacja ON idc = c_id
+LEFT JOIN egzemplarz ON ide = e_id
+WHERE rokwydania > 2000 AND email LIKE "%yahoo.com" AND datawypoz IS NOT NULL;
+
+#Zadanie 7
+SELECT COUNT(*) AS Ile
+FROM egzemplarz
+LEFT JOIN rezerwacja ON ide = e_id
+WHERE datazwrot IS NULL 
+AND wydawnictwo LIKE 'Czarne' 
+AND datazamow IS NOT NULL;
+
+#Zadanie 8
+SELECT czytelnik.*, datazwrot
+FROM czytelnik
+LEFT JOIN rezerwacja ON idc = c_id
+WHERE datazwrot IS NOT NULL
+AND MONTH(datawypoz) >= 3
+AND (c_id, datawypoz) IN (
+    SELECT c_id, MIN(datawypoz)
+    FROM rezerwacja
+    GROUP BY c_id
+);
+
+#Zadanie 9
+SELECT egzemplarz.*, datazamow 
+FROM egzemplarz
+LEFT JOIN rezerwacja ON ide=e_id 
+WHERE datazamow IS NULL 
+OR (c_id, datazamow) IN 
+  (SELECT idc, MAX(datazamow) AS data
+  FROM rezerwacja
+  LEFT JOIN czytelnik ON idc = c_id
+  GROUP BY idc);
+
+#Zadanie 10 
+SELECT c.*, COUNT(DISTINCT wydawnictwo) AS Ile 
+FROM czytelnik c
+LEFT JOIN rezerwacja ON idc = c_id 
+LEFT JOIN egzemplarz ON ide = e_id 
+LEFT JOIN czytelnik c2 ON c.idc > c2.idc
+WHERE datazamow IS NOT NULL
+GROUP BY c.idc 
+ORDER BY Ile DESC
+LIMIT 1;
